@@ -1,5 +1,6 @@
 package gui;
 
+import backend.ProductSpecification;
 import backend.Sale;
 
 import javax.swing.*;
@@ -11,7 +12,8 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         Container contentPanel = getContentPane();
 
-        final JPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66)), rightPanel = new CartPanel((int) (getWidth() * 0.33));
+        final CartPanel rightPanel = new CartPanel((int) (getWidth() * 0.33));
+        final MarketPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66), rightPanel::addProduct);
         rightPanel.setBackground(Color.YELLOW);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setDividerLocation((int) (getWidth() * 0.66));

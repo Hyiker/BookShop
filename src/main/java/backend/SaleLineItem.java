@@ -2,8 +2,8 @@ package backend;
 
 public class SaleLineItem {
     private int copies;
-    private ProductSpecification prodSpec;
-    private IPricingStrategy strategy;
+    private final ProductSpecification prodSpec;
+    private final IPricingStrategy strategy;
 
     public SaleLineItem(int copies, ProductSpecification prodSpec) {
         this.copies = copies;
@@ -21,5 +21,9 @@ public class SaleLineItem {
 
     public double getSubtotal() {
         return strategy.getSubtotal(this);
+    }
+
+    public void setCopies(int copies) {
+        this.copies = copies;
     }
 }

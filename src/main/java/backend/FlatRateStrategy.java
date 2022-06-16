@@ -14,6 +14,6 @@ public class FlatRateStrategy implements IPricingStrategy {
 
     @Override
     public String getDescription() {
-        return String.format("-%.3f$/本", discountPerBook);
+        return String.format("-%.1f$/本", discountPerBook);
     }
 }
