@@ -27,6 +27,17 @@ public class CartPanel extends JPanel {
         updateTotalPriceLabel();
     }
 
+    void setTableLoading(boolean loading) {
+        goodListTable.setLoading(loading);
+    }
+
+    void clear() {
+        sale.clear();
+        goodListTable.clear();
+        updateTotalPriceLabel();
+    }
+
+
     private void updateTotalPriceLabel() {
         // TODO: update price label with animated effect
         totalPrice = sale.getTotal();

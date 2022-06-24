@@ -262,6 +262,15 @@ public class JSONParser {
         return proxy.build();
     }
 
+    public JSONObject deserialize(String jsonString, boolean sleep) {
+        try {
+            Thread.sleep(sleep ? 5000 : 0);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return deserialize(jsonString);
+    }
+
     public JSONObject deserialize(String jsonString) {
         PlainTextJSONTokenizer tokenizer = new PlainTextJSONTokenizer();
         tokenizer.reset(jsonString, 0);

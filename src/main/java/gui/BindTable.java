@@ -22,10 +22,25 @@ public class BindTable<T> extends JTable {
     private final TreeMap<String, T> bindMap = new TreeMap<>();
     private final RowConverter<T> converter;
     private final int keyColumnIndex;
+    private final static String loadingText = "加载中...";
+
+    private boolean loading = false;
+
+    public void setLoading(boolean loading) {
+        this.loading = loading;
+        setEnabled(!loading);
+    }
 
     @Override
-    public void repaint() {
-        super.repaint();
+    public void paint(Graphics g) {
+        super.paint(g);
+        if (loading) {
+            g.setColor(new Color(0, 0, 0, 0.2f));
+            g.fillRect(0, 0, getWidth(), getHeight());
+            g.setColor(new Color(1, 1, 1, 0.9f));
+            g.setFont(new Font("微软雅黑", Font.BOLD, 20));
+            g.drawString(loadingText, getWidth() / 2, getHeight() / 2);
+        }
     }
 
     private void addRow(Object[] rowData) {

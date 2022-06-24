@@ -13,7 +13,21 @@ public class MainFrame extends JFrame {
         Container contentPanel = getContentPane();
 
         final CartPanel rightPanel = new CartPanel((int) (getWidth() * 0.33));
-        final MarketPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66), productFilePath, rightPanel::addProduct);
+        final MarketPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66), productFilePath,
+                rightPanel::addProduct, new ReloadProfileHandler() {
+            @Override
+            public void onReload() {
+                rightPanel.setTableLoading(true);
+                rightPanel.setEnabled(false);
+            }
+
+            @Override
+            public void reloadDone() {
+                rightPanel.setTableLoading(false);
+                rightPanel.setEnabled(true);
+                rightPanel.clear();
+            }
+        });
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setDividerLocation((int) (getWidth() * 0.66));
         splitPane.setEnabled(false);

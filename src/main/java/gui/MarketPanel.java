@@ -15,6 +15,12 @@ interface AddToCartHandler {
     void addToCart(ProductSpecification prodSpec, int copies);
 }
 
+interface ReloadProfileHandler {
+    void onReload();
+
+    void reloadDone();
+}
+
 public class MarketPanel extends JPanel {
     ProductSpecification[] productSpecifications;
     private final static ProductSpecification[] DEFAULT_PRODUCT_SPECIFICATIONS = new ProductSpecification[]{
@@ -37,7 +43,7 @@ public class MarketPanel extends JPanel {
             }
             br.close();
             fis.close();
-            JSONObject obj = jsonParser.deserialize(sb.toString());
+            JSONObject obj = jsonParser.deserialize(sb.toString(), false);
             if (obj.getType() != JSONType.ARRAY) {
                 System.out.println("Error: JSON file is not an array, fallback to default product specifications");
                 return DEFAULT_PRODUCT_SPECIFICATIONS;
@@ -59,11 +65,8 @@ public class MarketPanel extends JPanel {
         }
     }
 
-    public MarketPanel(int width, AddToCartHandler addToCartHandler) {
-        this(width, "", addToCartHandler);
-    }
 
-    public MarketPanel(int width, String psPath, AddToCartHandler addToCartHandler) {
+    public MarketPanel(int width, String psPath, AddToCartHandler addToCartHandler, ReloadProfileHandler reloadProfileHandler) {
         super(new BorderLayout());
 
         productSpecifications = loadProductSpecifications(psPath);
@@ -95,6 +98,28 @@ public class MarketPanel extends JPanel {
         add(goodListScrollPanel, BorderLayout.CENTER);
 
         JPanel leftBottomPanel = new JPanel(new FlowLayout());
+        JButton changeFileButton = new JButton("更改产品文件");
+        changeFileButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setDialogTitle("选择产品配置JSON文件");
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                goodListTable.setLoading(true);
+                reloadProfileHandler.onReload();
+                SwingUtilities.invokeLater(() -> {
+                    productSpecifications = loadProductSpecifications(file.getPath());
+                    goodListTable.clear();
+                    for (ProductSpecification ps : productSpecifications) {
+                        goodListTable.addItem(ps);
+                    }
+                    goodListTable.adjustColumnWidth();
+                    goodListTable.setLoading(false);
+                    reloadProfileHandler.reloadDone();
+                });
+            }
+        });
         JLabel totalTitle = new JLabel("数量");
         NumberField totalField = new NumberField(1);
         totalField.setPreferredSize(new Dimension(200, 30));
@@ -112,6 +137,7 @@ public class MarketPanel extends JPanel {
             addToCartHandler.addToCart(ps, num);
         });
         leftBottomPanel.setPreferredSize(new Dimension(width, 40));
+        leftBottomPanel.add(changeFileButton);
         leftBottomPanel.add(totalTitle);
         leftBottomPanel.add(totalField);
         leftBottomPanel.add(addButton);

@@ -13,7 +13,7 @@ public class Application {
             LafManager.setTheme(new IntelliJTheme());
             LafManager.install();
             String productFilePath = args.length > 0 ? args[0] : "";
-            new MainFrame("商城系统DEMO", 800, 600, productFilePath).display();
+            new MainFrame("商城系统DEMO", 1000, 800, productFilePath).display();
         });
     }
 }
