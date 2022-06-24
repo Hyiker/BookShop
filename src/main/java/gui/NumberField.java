@@ -31,10 +31,15 @@ public class NumberField extends JTextField {
         }
     }
 
-    NumberField() {
+    public void setNumber(int number) {
+        setText(Integer.toString(number));
+    }
+
+    NumberField(int initialNumber) {
         super();
         PlainDocument doc = (PlainDocument) getDocument();
         doc.setDocumentFilter(new NumberFilter());
+        setNumber(initialNumber);
     }
 
     int getNumber() {

@@ -23,6 +23,11 @@ public class BindTable<T> extends JTable {
     private final RowConverter<T> converter;
     private final int keyColumnIndex;
 
+    @Override
+    public void repaint() {
+        super.repaint();
+    }
+
     private void addRow(Object[] rowData) {
         DefaultTableModel tableModel = (DefaultTableModel) getModel();
         tableModel.addRow(rowData);

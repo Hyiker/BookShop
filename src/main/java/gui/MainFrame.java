@@ -9,12 +9,11 @@ import java.awt.*;
 public class MainFrame extends JFrame {
     private final Sale sale = new Sale();
 
-    private void initComponents() {
+    private void initComponents(String productFilePath) {
         Container contentPanel = getContentPane();
 
         final CartPanel rightPanel = new CartPanel((int) (getWidth() * 0.33));
-        final MarketPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66), rightPanel::addProduct);
-        rightPanel.setBackground(Color.YELLOW);
+        final MarketPanel leftPanel = new MarketPanel((int) (getWidth() * 0.66), productFilePath, rightPanel::addProduct);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setDividerLocation((int) (getWidth() * 0.66));
         splitPane.setEnabled(false);
@@ -24,7 +23,7 @@ public class MainFrame extends JFrame {
         setContentPane(contentPanel);
     }
 
-    public MainFrame(String title, int width, int height) {
+    public MainFrame(String title, int width, int height, String productFilePath) {
         super(title);
         // centralize the frame
         setLocationRelativeTo(null);
@@ -33,7 +32,7 @@ public class MainFrame extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        initComponents();
+        initComponents(productFilePath);
     }
 
     public void display() {

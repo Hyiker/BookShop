@@ -4,6 +4,11 @@ public class ProductSpecification {
     // 非教材类的计算机图书、教材类图书、连环画类图书、其他共4种
     public static final int COMPUTER = 0, TEACHING = 1, COMICS = 2, OTHER = 3;
 
+    private String isbn;
+    private double price;
+    private String title;
+    private int type;
+
     public static String getTypeName(int type) {
         switch (type) {
             case COMPUTER:
@@ -19,6 +24,9 @@ public class ProductSpecification {
         }
     }
 
+    public ProductSpecification() {
+    }
+
     public ProductSpecification(String isbn, double price, String title, int type) {
         this.isbn = isbn;
         this.price = price;
@@ -30,7 +38,6 @@ public class ProductSpecification {
         return price;
     }
 
-    private String isbn;
 
     public String getIsbn() {
         return isbn;
@@ -56,9 +63,6 @@ public class ProductSpecification {
         this.type = type;
     }
 
-    private double price;
-    private String title;
-    private int type;
 
     public int getType() {
         return type;

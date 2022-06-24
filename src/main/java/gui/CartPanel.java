@@ -63,6 +63,18 @@ public class CartPanel extends JPanel {
         totalPriceLabel = new JLabel();
         totalPriceLabel.setFont(new Font("微软雅黑", Font.BOLD, 12));
         JButton payButton = new JButton("结算");
+        payButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(this, String.format("总价: $%.1f，是否结算", totalPrice),
+                    "结算", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                JOptionPane.showMessageDialog(this, "结算成功");
+                sale.clear();
+                goodListTable.clear();
+                updateTotalPriceLabel();
+            } else if (result == JOptionPane.CANCEL_OPTION) {
+                JOptionPane.showMessageDialog(this, "取消结算");
+            }
+        });
         JButton removeButton = new JButton("删除");
         removeButton.addActionListener(e -> {
             SaleLineItem item = goodListTable.removeSelection();

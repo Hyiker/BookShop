@@ -12,7 +12,8 @@ public class Application {
         SwingUtilities.invokeLater(() -> {
             LafManager.setTheme(new IntelliJTheme());
             LafManager.install();
-            new MainFrame("商城系统DEMO", 800, 600).display();
+            String productFilePath = args.length > 0 ? args[0] : "";
+            new MainFrame("商城系统DEMO", 800, 600, productFilePath).display();
         });
     }
 }
