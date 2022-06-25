@@ -8,8 +8,9 @@ import tools.JSONReflectException;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 interface AddToCartHandler {
     void addToCart(ProductSpecification prodSpec, int copies);
@@ -35,15 +36,7 @@ public class MarketPanel extends JPanel {
         JSONParser jsonParser = new JSONParser();
         try {
             FileInputStream fis = new FileInputStream(file);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-            br.close();
-            fis.close();
-            JSONObject obj = jsonParser.deserialize(sb.toString(), false);
+            JSONObject obj = jsonParser.deserialize(fis);
             if (obj.getType() != JSONType.ARRAY) {
                 System.out.println("Error: JSON file is not an array, fallback to default product specifications");
                 return DEFAULT_PRODUCT_SPECIFICATIONS;
@@ -55,9 +48,6 @@ public class MarketPanel extends JPanel {
             return productSpecifications;
         } catch (FileNotFoundException e) {
             System.out.printf("File %s not found, fallback to default product specifications\n", filePath);
-            return DEFAULT_PRODUCT_SPECIFICATIONS;
-        } catch (IOException e) {
-            System.out.printf("Error reading file %s, fallback to default product specifications\n", filePath);
             return DEFAULT_PRODUCT_SPECIFICATIONS;
         } catch (JSONReflectException e) {
             System.out.printf("Error parsing JSON file %s with reason \"%s\", fallback to default product specifications\n", filePath, e.getMessage());

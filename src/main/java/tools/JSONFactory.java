@@ -11,7 +11,7 @@ public class JSONFactory {
     static class JSONProxyObject {
         private final JSONObject json;
         private String key = null;
-        private boolean isArray;
+        private final boolean isArray;
         private boolean keyTurn = true;
 
         public JSONProxyObject(boolean isMap) {

@@ -1,9 +1,12 @@
 package tools;
 
 
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class JSONParser {
     private enum TokenType {
@@ -25,6 +28,7 @@ public class JSONParser {
     }
 
     private interface JSONTokenizer {
+
         TokenizerResult nextToken();
 
         boolean isFrontBracket(char c);
@@ -36,12 +40,9 @@ public class JSONParser {
         boolean hasNextToken();
     }
 
+    private abstract static class AbstractJSONTokenizer implements JSONTokenizer {
+        protected TokenizerResult nextTokenBuf = new TokenizerResult();
 
-    private static class PlainTextJSONTokenizer implements JSONTokenizer {
-
-        private String text;
-        private TokenizerResult nextTokenBuf = null;
-        private int index = 0;
 
         private boolean isWhiteSpace(char c) {
             return c == ' ' || c == '\t' || c == '\n';
@@ -57,22 +58,6 @@ public class JSONParser {
 
         private boolean isBracket(char c) {
             return isFrontBracket(c) || isBackBracket(c);
-        }
-
-
-        @Override
-        public boolean isFrontBracket(char c) {
-            return c == '{' || c == '[';
-        }
-
-        @Override
-        public boolean isBackBracket(char c) {
-            return c == '}' || c == ']';
-        }
-
-        @Override
-        public boolean bracketMatches(char c1, char c2) {
-            return (c1 == '{' && c2 == '}') || (c1 == '[' && c2 == ']');
         }
 
         private char unescape(char c) {
@@ -104,24 +89,42 @@ public class JSONParser {
             return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
         }
 
-        public PlainTextJSONTokenizer() {
+        @Override
+        public boolean isFrontBracket(char c) {
+            return c == '{' || c == '[';
         }
 
-        public void reset(String text, int startIndex) {
-            this.text = text;
-            this.index = startIndex;
-            nextToken();
+        @Override
+        public boolean isBackBracket(char c) {
+            return c == '}' || c == ']';
+        }
+
+        @Override
+        public boolean bracketMatches(char c1, char c2) {
+            return (c1 == '{' && c2 == '}') || (c1 == '[' && c2 == ']');
+        }
+
+        abstract char nextChar();
+
+        abstract char nextCharNoConsume();
+
+        abstract boolean hasNextChar();
+
+
+        @Override
+        public boolean hasNextToken() {
+            return nextTokenBuf != null;
         }
 
         @Override
         public TokenizerResult nextToken() {
+
             TokenizerResult token = nextTokenBuf != null ? nextTokenBuf.clone() : null;
             TokenType type = TokenType.UNKNOWN;
             StringBuilder stringBuilder = new StringBuilder();
             char c;
-            while (index < text.length()) {
-                c = text.charAt(index);
-                index++;
+            while (hasNextChar()) {
+                c = nextChar();
                 if (isWhiteSpace(c)) {
                 } else if (isBracket(c)) {
                     stringBuilder.append(c);
@@ -130,25 +133,23 @@ public class JSONParser {
                 } else if (c == '"') {
                     type = TokenType.IDENTIFIER;
                     stringBuilder.append(c);
-                    while (index < text.length()) {
-                        c = text.charAt(index);
+                    while (hasNextChar()) {
+                        c = nextChar();
                         if (c == '\\') {
-                            c = text.charAt(index);
+                            c = nextChar();
                             stringBuilder.append(unescape(c));
                         } else if (c == '"') {
                             stringBuilder.append(c);
-                            index++;
                             break;
                         } else {
                             stringBuilder.append(c);
                         }
-                        index++;
                     }
                     break;
                 } else if (isNumber(c)) {
                     stringBuilder.append(c);
-                    while (index < text.length()) {
-                        c = text.charAt(index);
+                    while (hasNextChar()) {
+                        c = nextCharNoConsume();
                         if (isNumber(c)) {
                             stringBuilder.append(c);
                         } else if (c == '.') {
@@ -158,20 +159,20 @@ public class JSONParser {
                         } else {
                             break;
                         }
-                        index++;
+                        nextChar();
                     }
                     type = TokenType.IDENTIFIER;
                     break;
                 } else if (isAlpha(c)) {
                     stringBuilder.append(c);
-                    while (index < text.length()) {
-                        c = text.charAt(index);
+                    while (hasNextChar()) {
+                        c = nextCharNoConsume();
                         if (isAlpha(c)) {
                             stringBuilder.append(c);
                         } else {
                             break;
                         }
-                        index++;
+                        nextChar();
                     }
                     type = TokenType.IDENTIFIER;
                     break;
@@ -184,7 +185,7 @@ public class JSONParser {
                     type = TokenType.COLON;
                     break;
                 } else {
-                    throw new BadTokenException(c, index);
+                    throw new BadTokenException(c);
                 }
             }
 
@@ -199,11 +200,105 @@ public class JSONParser {
             }
             return token;
         }
+    }
+
+
+    private static class PlainTextJSONTokenizer extends AbstractJSONTokenizer {
+
+        private String text;
+        private int index = 0;
+
+        public PlainTextJSONTokenizer() {
+        }
+
+        public void reset(String text, int startIndex) {
+            this.text = text;
+            this.index = startIndex;
+            nextToken();
+        }
 
         @Override
-        public boolean hasNextToken() {
-            return nextTokenBuf != null;
+        char nextChar() {
+            return text.charAt(index++);
         }
+
+        @Override
+        char nextCharNoConsume() {
+            return text.charAt(index);
+        }
+
+        @Override
+        boolean hasNextChar() {
+            return index < text.length();
+        }
+
+    }
+
+    private static class StreamJSONTokenizer extends AbstractJSONTokenizer {
+        private BufferedReader reader;
+        private char nextCharBuffer;
+        private boolean nextCharBufferValid = false;
+
+        public void reset(InputStream inputStream) {
+
+            this.reader = new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()));
+
+            nextToken();
+        }
+
+        @Override
+        char nextChar() {
+            if (nextCharBufferValid) {
+                nextCharBufferValid = false;
+                return nextCharBuffer;
+            } else {
+                try {
+                    int c = reader.read();
+                    assert c != -1;
+                    return (char) c;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        @Override
+        char nextCharNoConsume() {
+            if (nextCharBufferValid) {
+                return nextCharBuffer;
+            } else {
+                try {
+                    int c = reader.read();
+                    assert c != -1;
+                    nextCharBuffer = (char) c;
+                    nextCharBufferValid = true;
+                    return nextCharBuffer;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        @Override
+        boolean hasNextChar() {
+            if (nextCharBufferValid) {
+                return true;
+            } else {
+                try {
+                    int c = reader.read();
+                    if (c == -1) {
+                        return false;
+                    } else {
+                        nextCharBuffer = (char) c;
+                        nextCharBufferValid = true;
+                        return true;
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
     }
 
 
@@ -272,8 +367,13 @@ public class JSONParser {
     }
 
     public JSONObject deserialize(String jsonString) {
-        PlainTextJSONTokenizer tokenizer = new PlainTextJSONTokenizer();
-        tokenizer.reset(jsonString, 0);
+        InputStream inputStream = new ByteArrayInputStream(jsonString.getBytes());
+        return deserialize(inputStream);
+    }
+
+    public JSONObject deserialize(InputStream inputStream) {
+        StreamJSONTokenizer tokenizer = new StreamJSONTokenizer();
+        tokenizer.reset(inputStream);
         TokenizerResult token = tokenizer.nextToken();
         if (token == null) {
             return null;
