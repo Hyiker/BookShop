@@ -13,10 +13,6 @@ interface RowConverter<T> {
     String getKey(T obj);
 }
 
-interface RowConflictResolver<T> {
-    boolean resolve(T objOld, T objNew);
-}
-
 // T is bind class type
 public class BindTable<T> extends JTable {
     private final TreeMap<String, T> bindMap = new TreeMap<>();
