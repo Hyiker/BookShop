@@ -1,4 +1,5 @@
 import org.junit.Test;
+import tools.BadTokenException;
 import tools.JSONObject;
 import tools.JSONParser;
 
@@ -9,7 +10,7 @@ import static org.junit.Assert.*;
 
 public class JSONParserTest {
     @Test
-    public void testSimpleJSON() {
+    public void testSimpleJSON() throws BadTokenException {
         JSONParser parser = new JSONParser();
         JSONObject object = parser.deserialize("{\"boolean\":true,\"color\":\"gold\",\"null\":null,\"number\":123,\"string\":\"Hello World\"}");
 
@@ -23,7 +24,7 @@ public class JSONParserTest {
     }
 
     @Test
-    public void testCascadeJson() {
+    public void testCascadeJson() throws BadTokenException {
         JSONParser parser = new JSONParser();
         JSONObject object = parser.deserialize("{\"boolean\":true,\"color\":\"gold\",\"null\":null,\"number\":123,\"string\":\"Hello World\",\"array\":[1,2,3,4,5],\"map\":{\"a\":1,\"b\":2,\"c\":3}}");
 
@@ -43,7 +44,7 @@ public class JSONParserTest {
     }
 
     @Test
-    public void testMultiLevelCascadeJson() {
+    public void testMultiLevelCascadeJson() throws BadTokenException {
         JSONParser parser = new JSONParser();
         JSONObject object = parser.deserialize("{\"array\":[1,2,{\"array\":[1,3],\"a\":1,\"b\":2,\"c\":3}],\"map\":{\"arr\":[\"arr\",123,true],\"a\":1,\"b\":2,\"c\":3}}");
 
@@ -66,7 +67,7 @@ public class JSONParserTest {
     }
 
     @Test
-    public void testTopLevelArrayJson() {
+    public void testTopLevelArrayJson() throws BadTokenException {
         JSONParser parser = new JSONParser();
         JSONObject object = parser.deserialize("[\n" +
                 "  1,\n" +
@@ -91,7 +92,7 @@ public class JSONParserTest {
     }
 
     @Test
-    public void testStreamingDeserialize() {
+    public void testStreamingDeserialize() throws BadTokenException {
         JSONParser parser = new JSONParser();
         String jsonStream = "[\n" +
                 "  1,\n" +
@@ -118,7 +119,7 @@ public class JSONParserTest {
     }
 
     @Test
-    public void testStreamingMultiLevelCascadeJson() {
+    public void testStreamingMultiLevelCascadeJson() throws BadTokenException {
         JSONParser parser = new JSONParser();
         String jsonStream = "{\"array\":[1,2,{\"array\":[1,3],\"a\":1,\"b\":2,\"c\":3}],\"map\":{\"arr\":[\"arr\",123,true],\"a\":1,\"b\":2,\"c\":3}}";
         InputStream stream = new ByteArrayInputStream(jsonStream.getBytes());

@@ -2,11 +2,7 @@ package tools;
 
 
 import java.io.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 public class JSONParser {
     private enum TokenType {
@@ -29,7 +25,7 @@ public class JSONParser {
 
     private interface JSONTokenizer {
 
-        TokenizerResult nextToken();
+        TokenizerResult nextToken() throws BadTokenException;
 
         boolean isFrontBracket(char c);
 
@@ -44,8 +40,8 @@ public class JSONParser {
         protected TokenizerResult nextTokenBuf = new TokenizerResult();
 
 
-        private boolean isWhiteSpace(char c) {
-            return c == ' ' || c == '\t' || c == '\n';
+        private boolean isFormatCharacter(char c) {
+            return c == ' ' || c == '\t' || c == '\n' || c == '\r';
         }
 
         private boolean isComma(char c) {
@@ -117,7 +113,7 @@ public class JSONParser {
         }
 
         @Override
-        public TokenizerResult nextToken() {
+        public TokenizerResult nextToken() throws BadTokenException {
 
             TokenizerResult token = nextTokenBuf != null ? nextTokenBuf.clone() : null;
             TokenType type = TokenType.UNKNOWN;
@@ -125,7 +121,7 @@ public class JSONParser {
             char c;
             while (hasNextChar()) {
                 c = nextChar();
-                if (isWhiteSpace(c)) {
+                if (isFormatCharacter(c)) {
                 } else if (isBracket(c)) {
                     stringBuilder.append(c);
                     type = TokenType.BRACKET;
@@ -211,7 +207,7 @@ public class JSONParser {
         public PlainTextJSONTokenizer() {
         }
 
-        public void reset(String text, int startIndex) {
+        public void reset(String text, int startIndex) throws BadTokenException {
             this.text = text;
             this.index = startIndex;
             nextToken();
@@ -239,7 +235,7 @@ public class JSONParser {
         private char nextCharBuffer;
         private boolean nextCharBufferValid = false;
 
-        public void reset(InputStream inputStream) {
+        public void reset(InputStream inputStream) throws BadTokenException {
 
             this.reader = new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()));
 
@@ -357,7 +353,7 @@ public class JSONParser {
         return proxy.build();
     }
 
-    public JSONObject deserialize(String jsonString, boolean sleep) {
+    public JSONObject deserialize(String jsonString, boolean sleep) throws BadTokenException {
         try {
             Thread.sleep(sleep ? 5000 : 0);
         } catch (InterruptedException e) {
@@ -366,12 +362,12 @@ public class JSONParser {
         return deserialize(jsonString);
     }
 
-    public JSONObject deserialize(String jsonString) {
+    public JSONObject deserialize(String jsonString) throws BadTokenException {
         InputStream inputStream = new ByteArrayInputStream(jsonString.getBytes());
         return deserialize(inputStream);
     }
 
-    public JSONObject deserialize(InputStream inputStream) {
+    public JSONObject deserialize(InputStream inputStream) throws BadTokenException {
         StreamJSONTokenizer tokenizer = new StreamJSONTokenizer();
         tokenizer.reset(inputStream);
         TokenizerResult token = tokenizer.nextToken();

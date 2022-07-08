@@ -1,6 +1,6 @@
 package tools;
 
-public class BadTokenException extends RuntimeException {
+public class BadTokenException extends Exception {
     public String token;
 
     public BadTokenException(char c, int index) {

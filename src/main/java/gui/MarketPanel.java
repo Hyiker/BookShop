@@ -2,6 +2,7 @@ package gui;
 
 import backend.PricingStrategyFactory;
 import backend.ProductSpecification;
+import tools.BadTokenException;
 import tools.JSONObject;
 import tools.JSONParser;
 import tools.JSONReflectException;
@@ -31,7 +32,7 @@ public class MarketPanel extends JPanel {
             new ProductSpecification("9787115426901", 30, "爱丽丝历险记", ProductSpecification.COMICS),
             new ProductSpecification("9787504849649", 20, "煲汤大全", ProductSpecification.OTHER)};
 
-    private static ProductSpecification[] loadProductSpecifications(String filePath) {
+    private static ProductSpecification[] loadProductSpecifications(String filePath) throws BadTokenException {
         File file = new File(filePath);
         JSONParser jsonParser = new JSONParser();
         try {
@@ -59,7 +60,12 @@ public class MarketPanel extends JPanel {
     public MarketPanel(int width, String psPath, AddToCartHandler addToCartHandler, ReloadProfileHandler reloadProfileHandler) {
         super(new BorderLayout());
 
-        productSpecifications = loadProductSpecifications(psPath);
+        try {
+            productSpecifications = loadProductSpecifications(psPath);
+        } catch (BadTokenException e) {
+            System.out.println("Bad JSON Format, fallback to default");
+            productSpecifications = DEFAULT_PRODUCT_SPECIFICATIONS;
+        }
 
         JLabel goodListTitle = new JLabel("商品列表");
         goodListTitle.setFont(new Font("微软雅黑", Font.BOLD, 20));
@@ -99,7 +105,11 @@ public class MarketPanel extends JPanel {
                 goodListTable.setLoading(true);
                 reloadProfileHandler.onReload();
                 SwingUtilities.invokeLater(() -> {
-                    productSpecifications = loadProductSpecifications(file.getPath());
+                    try {
+                        productSpecifications = loadProductSpecifications(file.getPath());
+                    } catch (BadTokenException ex) {
+                        JOptionPane.showMessageDialog(this, "JSON格式不合法，将回滚至默认的配置。");
+                    }
                     goodListTable.clear();
                     for (ProductSpecification ps : productSpecifications) {
                         goodListTable.addItem(ps);
